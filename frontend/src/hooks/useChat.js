@@ -16,8 +16,7 @@ export const useChat = () => {
 
         try {
             const data = await sendApiMessage(content);
-            // Backend returns 'reply' field from executeAgentWorkflow
-            const assistantMsg = { role: 'assistant', content: data.reply || data.response };
+            const assistantMsg = { role: 'assistant', content: data.reply };
             setMessages(prev => [...prev, assistantMsg]);
             return data;
         } catch (error) {

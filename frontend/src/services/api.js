@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api/ai';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/ai';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -50,9 +50,20 @@ export const toggleTaskStatus = async (id) => {
     }
 };
 
+export const createTask = async (taskData) => {
+    try {
+        const response = await api.post('/tasks', taskData);
+        return response.data;
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
+    }
+};
+
 export default {
     sendMessage,
     uploadDocument,
     getTasks,
     toggleTaskStatus,
+    createTask,
 };

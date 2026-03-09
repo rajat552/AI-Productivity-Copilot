@@ -68,7 +68,7 @@ const ChatWindow = ({ onWorkflowStart, onWorkflowComplete }) => {
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyPress}
-                        placeholder="Sumarize this and create tasks..."
+                        placeholder="Summarize this and create tasks..."
                         className="flex-1 bg-transparent border-none focus:outline-none px-2 text-text-main text-base font-medium resize-none py-3 max-h-40 min-h-[44px] placeholder:text-text-muted/40"
                         rows={1}
                     />

@@ -5,6 +5,11 @@ const Conversation = require('../models/Conversation');
 
 exports.handleChat = async (req, res, next) => {
     const { message } = req.body;
+
+    if (!message || typeof message !== 'string' || !message.trim()) {
+        return res.status(400).json({ error: 'Message is required and must be a non-empty string' });
+    }
+
     try {
         // 1. Retrieve last 6 messages for context
         const history = await Conversation.find()
@@ -76,8 +81,14 @@ exports.getTasks = async (req, res, next) => {
 };
 
 exports.createTask = async (req, res, next) => {
+    const { title } = req.body;
+
+    if (!title || typeof title !== 'string' || !title.trim()) {
+        return res.status(400).json({ error: 'Task title is required' });
+    }
+
     try {
-        const task = await Task.create(req.body);
+        const task = await Task.create({ title: title.trim(), description: req.body.description || '', status: 'pending' });
         res.status(201).json(task);
     } catch (error) {
         next(error);
