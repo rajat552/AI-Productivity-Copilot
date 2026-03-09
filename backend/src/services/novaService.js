@@ -1,8 +1,8 @@
-const { BedrockRuntimeClient, InvokeModelCommand } = require("@aws-sdk/client-bedrock-runtime");
+const { BedrockRuntimeClient, ConverseCommand } = require("@aws-sdk/client-bedrock-runtime");
 
 /**
  * Nova Service handles all direct interactions with Amazon Bedrock.
- * It uses Nova 2 Lite for fast, efficient reasoning and task planning.
+ * Uses the Converse API for Amazon Nova Lite model.
  */
 class NovaService {
     constructor() {
@@ -13,89 +13,99 @@ class NovaService {
                 secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
             },
         });
-        this.modelId = process.env.NOVA_MODEL_LITE || "amazon.nova-lite-v1";
+        this.modelId = process.env.NOVA_MODEL_LITE || "amazon.nova-lite-v1:0";
     }
 
     /**
-     * Core function to invoke Nova model with multi-turn history
+     * Core function to invoke Nova model via the Converse API
+     * Supports multi-turn conversation history
      */
     async invokeNova(prompt, systemPrompt = "You are an AI Productivity Copilot.", history = []) {
-        // If keys are missing, return mock data
+        // If keys are missing, return mock data for development
         if (!process.env.AWS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID.includes('your_')) {
             return this.getMockResponse(prompt);
         }
 
-        // Combine history with latest prompt
-        const messages = history.map(msg => ({
-            role: msg.role === 'assistant' ? 'assistant' : 'user',
-            content: [{ text: msg.content }]
-        }));
+        // Build multi-turn message history
+        const messages = [];
 
-        // Add latest prompt
+        for (const msg of history) {
+            messages.push({
+                role: msg.role === 'assistant' ? 'assistant' : 'user',
+                content: [{ text: msg.content }]
+            });
+        }
+
+        // Add latest user prompt
         messages.push({ role: "user", content: [{ text: prompt }] });
 
-        const payload = {
-            inferenceConfig: { max_new_tokens: 2000, temperature: 0.7, top_p: 0.9 },
-            messages,
-            system: [{ text: systemPrompt }]
-        };
-
         try {
-            const command = new InvokeModelCommand({
+            const command = new ConverseCommand({
                 modelId: this.modelId,
-                contentType: "application/json",
-                accept: "application/json",
-                body: JSON.stringify(payload),
+                messages,
+                system: [{ text: systemPrompt }],
+                inferenceConfig: {
+                    maxTokens: 2000,
+                    temperature: 0.7,
+                    topP: 0.9,
+                },
             });
 
             const response = await this.client.send(command);
-            const responseBody = JSON.parse(new TextDecoder().decode(response.body));
-            return responseBody.output.message.content[0].text;
+            return response.output.message.content[0].text;
         } catch (error) {
-            console.error("Bedrock API Error:", error);
-            throw new Error("Failed to communicate with Amazon Nova");
+            console.error("Bedrock Converse API Error:", error.message);
+            // Fallback to mock if Bedrock fails
+            console.warn("Falling back to mock response.");
+            return this.getMockResponse(prompt);
         }
     }
 
     async generateResponse(prompt, history = []) {
-        return this.invokeNova(prompt, "You are an AI Productivity Copilot with memory.", history);
+        return this.invokeNova(prompt, "You are an AI Productivity Copilot. Be helpful, concise, and actionable.", history);
     }
 
     async summarizeDocument(text) {
         const prompt = `Summarize the following document content concisely, highlighting key insights:\n\n${text}`;
-        return this.invokeNova(prompt, "You are an expert document analyst.");
+        return this.invokeNova(prompt, "You are an expert document analyst. Provide clear, structured summaries.");
     }
 
     async generateTasks(text) {
-        const prompt = `Based on the following content, extract actionable tasks. 
-    Return them as a JSON array of objects with 'title' and 'description'.
-    Content: ${text}`;
-        const response = await this.invokeNova(prompt, "You are a task management specialist. Always respond with valid JSON.");
+        const prompt = `Based on the following content, extract actionable tasks.
+Return ONLY a valid JSON array of objects with 'title' and 'description' fields. No extra text.
+Content: ${text}`;
+        const response = await this.invokeNova(prompt, "You are a task management specialist. Always respond with valid JSON only.");
 
         try {
-            // Extract JSON array from response
-            const jsonStr = response.match(/\[.*\]/s)?.[0] || response;
+            const jsonStr = response.match(/\[[\s\S]*\]/)?.[0] || response;
             return JSON.parse(jsonStr);
         } catch (e) {
-            return [{ title: "Analyze content", description: "Review provided information for action items" }];
+            return [{ title: "Review content", description: "Analyze the provided information for action items" }];
         }
     }
 
-    /**
-     * Nova Reasoning for workflow planning
-     */
     async planWorkflow(command) {
-        const prompt = `Analyze this user command: "${command}". 
-    Identify if it requires: 'summarization', 'task_generation', or 'general_chat'.
-    Determine the steps to execute.`;
-        return this.invokeNova(prompt, "You are a workflow architect.");
+        const prompt = `Analyze this user command: "${command}".
+Identify if it requires: 'summarization', 'task_generation', 'plan_schedule', 'draft_email', or 'general_chat'.
+Return a JSON object: { "intents": ["intent1", "intent2"] }`;
+        return this.invokeNova(prompt, "You are a workflow architect. Respond with valid JSON only.");
     }
 
     getMockResponse(prompt) {
-        if (prompt.toLowerCase().includes('summarize')) {
-            return "This document discusses the implementation of AI agents using Amazon Nova models. It highlights the benefits of low-latency reasoning and multi-step workflow automation.";
+        const lower = prompt.toLowerCase();
+        if (lower.includes('summarize') || lower.includes('summary')) {
+            return "This document discusses the implementation of AI agents using Amazon Nova models. Key points include: (1) Low-latency reasoning with Nova Lite, (2) Multi-step workflow automation, (3) Multimodal document understanding with Nova embeddings.";
         }
-        return "I've analyzed your request. I can help you summarize documents, plan your schedule, and manage tasks efficiently.";
+        if (lower.includes('task') || lower.includes('todo')) {
+            return '[{"title":"Review project architecture","description":"Analyze the current system design and identify improvements"},{"title":"Set up CI/CD pipeline","description":"Configure automated deployment workflow"}]';
+        }
+        if (lower.includes('email') || lower.includes('draft')) {
+            return "Subject: Project Update\n\nHi Team,\n\nI wanted to share a quick update on our progress. We've completed the initial architecture review and identified key areas for improvement.\n\nBest regards,\nAI Copilot";
+        }
+        if (lower.includes('schedule') || lower.includes('plan')) {
+            return "📅 Optimized Schedule:\n\n9:00 AM - Review documentation\n10:00 AM - Team standup\n10:30 AM - Deep work: Core feature development\n12:00 PM - Lunch break\n1:00 PM - Code review & testing\n3:00 PM - Planning session\n4:30 PM - Wrap-up & notes";
+        }
+        return "I've analyzed your request. I can help you summarize documents, generate tasks, draft emails, plan schedules, and automate multi-step workflows. What would you like me to do?";
     }
 }
 

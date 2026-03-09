@@ -1,95 +1,200 @@
-# AI Productivity Copilot 🚀
+# 🤖 AI Productivity Copilot
 
-A full-stack generative AI assistant built for high-performance productivity, powered by **Amazon Nova models on AWS Bedrock**.
+> **An Agentic AI Assistant powered by Amazon Nova models that understands commands, reasons about tasks, and automates multi-step productivity workflows.**
 
-## 🌟 Key Features
+Built for the **AWS Hackathon 2026** 🏆
 
-*   **AI Chat & Reasoning**: Intelligent task planning and conversation using **Nova 2 Lite**.
-*   **Voice Assistant**: Hands-free productivity commands using Web Speech API and **Nova 2 Sonic**.
-*   **Document Intelligence**: Deep analysis and summary of PDF/Text files using **Nova Multimodal Embeddings**.
-*   **Workflow Automation**: Simulated UI workflow execution (Nova Act style) for multi-step task handling.
-*   **Modern UI**: Sleek, glassmorphic dashboard built with React, Tailwind CSS, and Framer Motion.
+---
+
+## 🎯 What It Does
+
+AI Productivity Copilot is not just a chatbot — it's an **AI Agent** that:
+
+1. **Understands** natural language commands via Amazon Nova 2 Lite
+2. **Reasons** about user intent (summarize? plan? draft email?)
+3. **Plans** a multi-step execution strategy
+4. **Executes** each step sequentially (summarize → extract tasks → save to DB)
+5. **Returns** structured, actionable results
+
+### Example Workflow
+
+```
+User: "Summarize this document and create tasks from it"
+
+Agent Thinking:
+  → Intent detected: [summarize_document, generate_tasks]
+  → Step 1: Parse document with Nova reasoning
+  → Step 2: Generate structured summary
+  → Step 3: Extract actionable tasks as JSON
+  → Step 4: Save tasks to MongoDB
+  → Return combined result
+```
+
+---
 
 ## 🛠️ Tech Stack
 
-*   **Frontend**: React (Vite), Tailwind CSS, Lucide Icons, Axios.
-*   **Backend**: Node.js, Express, AWS SDK (@aws-sdk/client-bedrock-runtime).
-*   **Database**: MongoDB (Mongoose).
-*   **AI**: Amazon Nova (Lite, Sonic, Embeddings/Act simulation).
+| Layer | Technology |
+|-------|-----------|
+| **AI Engine** | Amazon Nova 2 Lite (via AWS Bedrock Converse API) |
+| **Voice** | Web Speech API (Nova Sonic ready) |
+| **Embeddings** | Amazon Titan Embed Text v2 |
+| **Agent Sim** | Nova Act workflow simulation |
+| **Frontend** | React + Vite + Tailwind CSS v4 |
+| **Backend** | Node.js + Express.js |
+| **Database** | MongoDB Atlas (Mongoose ODM) |
+| **Animations** | Framer Motion |
+
+---
+
+## ✨ Key Features
+
+### 🧠 Agentic Workflow Engine
+- Multi-step command execution with intent detection
+- Sequential task planning and execution
+- Real-time execution logs (Nova Act simulation)
+
+### 💬 AI Chat Interface
+- Conversational memory (remembers last 6 messages)
+- Multi-turn context awareness
+- Voice input via Web Speech API
+
+### 📄 Document Intelligence
+- PDF & text file upload with drag-and-drop
+- AI-powered document summarization
+- Automatic task extraction from documents
+
+### ✅ Smart Task Pipeline
+- AI-generated tasks saved to MongoDB
+- Toggle task status (pending ↔ completed)
+- Real-time pipeline sync with chat
+
+### 🌓 Premium UI/UX
+- Dark/Light mode toggle with smooth transitions
+- Glassmorphism design with backdrop blur
+- Micro-animations and hover effects
+- Fully responsive layout
+
+---
+
+## 📂 Project Structure
+
+```
+AI-Productivity-Copilot/
+├── frontend/                    # React + Vite
+│   └── src/
+│       ├── components/          # Navbar, ChatWindow, TaskPanel, etc.
+│       ├── pages/               # Home, Dashboard, Documents, Tasks
+│       ├── hooks/               # useChat, useVoiceInput
+│       ├── services/            # API layer (axios)
+│       └── context/             # ThemeContext
+│
+├── backend/                     # Node.js + Express
+│   ├── server.js                # Entry point
+│   └── src/
+│       ├── controllers/         # aiController.js
+│       ├── services/            # novaService.js, workflowService.js
+│       ├── models/              # Task.js, Conversation.js
+│       ├── routes/              # aiRoutes.js
+│       └── middleware/          # errorHandler.js
+│
+└── README.md
+```
 
 ---
 
 ## 🚀 Getting Started
 
-### 1. Prerequisites
-*   Node.js (v18+)
-*   MongoDB installed and running
-*   AWS Account with Bedrock access (Amazon Nova models enabled)
+### Prerequisites
+- Node.js 18+
+- MongoDB Atlas account
+- AWS account with Bedrock access
 
-### 2. AWS Setup
-Ensure you have access to the following Nova model IDs in Bedrock:
-- `amazon.nova-lite-v1`
-- `amazon.nova-sonic-v1`
-- `amazon.nova-embeddings-v1`
+### 1. Clone the repo
+```bash
+git clone https://github.com/rajat552/AI-Productivity-Copilot.git
+cd AI-Productivity-Copilot
+```
 
-### 3. Backend Setup
+### 2. Setup Backend
 ```bash
 cd backend
 npm install
 ```
-Create a `.env` file in the `backend/` directory:
+
+Create a `.env` file:
 ```env
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/ai-productivity-copilot
-AWS_ACCESS_KEY_ID=your_access_key
-AWS_SECRET_ACCESS_KEY=your_secret_key
+MONGODB_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/ai-productivity-copilot
+AWS_ACCESS_KEY_ID=your_key
+AWS_SECRET_ACCESS_KEY=your_secret
 AWS_REGION=us-east-1
-NOVA_MODEL_LITE=amazon.nova-lite-v1
-NOVA_MODEL_SONIC=amazon.nova-sonic-v1
-NOVA_MODEL_EMBEDDING=amazon.nova-embeddings-v1
-```
-Start the server:
-```bash
-npm start
+NOVA_MODEL_LITE=amazon.nova-lite-v1:0
 ```
 
-### 4. Frontend Setup
+Start the server:
+```bash
+node server.js
+```
+
+### 3. Setup Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
----
-
-## 📂 Project Structure
-
-```text
-├── backend/
-│   ├── controllers/    # Route controllers
-│   ├── models/         # Mongoose schemas
-│   ├── routes/         # API endpoints
-│   ├── services/       # Nova/AWS Bedrock logic
-│   └── index.js        # Entry point
-└── frontend/
-    ├── src/
-    │   ├── components/ # Reusable UI components
-    │   ├── pages/      # Application views
-    │   ├── services/   # API interaction logic
-    │   └── App.jsx     # Routing & Layout
-    └── tailwind.config.js
-```
+Visit **http://localhost:5173** 🚀
 
 ---
 
-## 📝 Example Commands to Try
+## 🔌 API Endpoints
 
-*   "Analyze the document and create a list of all action items."
-*   "Create a study schedule for my upcoming exam based on these notes."
-*   "Draft a follow-up email for the meeting we just summarized."
-*   "Plan my schedule for tomorrow starting at 9 AM."
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/ai/chat` | Send a command to the AI agent |
+| `POST` | `/api/ai/upload` | Upload a document for analysis |
+| `GET` | `/api/ai/tasks` | Retrieve all tasks |
+| `POST` | `/api/ai/tasks` | Create a new task |
+| `PATCH` | `/api/ai/tasks/:id/toggle` | Toggle task status |
 
 ---
 
-## 🏆 Hackathon Project
-Developed for exploring the capabilities of Amazon Nova models on AWS Bedrock.
+## 🧪 Example Commands
+
+| Command | What the Agent Does |
+|---------|-------------------|
+| "Summarize this document" | Generates a concise summary |
+| "Create tasks from this" | Extracts action items and saves to DB |
+| "Draft an email about the project" | Generates a professional email |
+| "Plan my schedule for tomorrow" | Creates an optimized daily schedule |
+| "Summarize and create tasks" | Multi-step: summarize + extract tasks |
+
+---
+
+## 🏗️ Amazon Nova Integration
+
+### Nova 2 Lite (Reasoning)
+Used for intent detection, summarization, task extraction, and general conversation via the **Bedrock Converse API**.
+
+### Nova Sonic (Voice)
+Web Speech API captures voice → transcribed text sent to Nova Lite for processing.
+
+### Nova Act (Workflow Simulation)
+The Activity Feed panel simulates Nova Act's multi-step UI automation by logging each reasoning and execution step in real-time.
+
+### Titan Embeddings
+Pre-configured for future RAG (Retrieval-Augmented Generation) document search capabilities.
+
+---
+
+## 👨‍💻 Author
+
+**Rajat Aggarwal**
+- GitHub: [@rajat552](https://github.com/rajat552)
+
+---
+
+## 📄 License
+
+This project is built for the AWS Hackathon 2026.
