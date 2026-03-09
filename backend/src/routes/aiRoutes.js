@@ -14,5 +14,6 @@ router.post('/upload', upload.single('document'), aiController.handleUpload);
 // Task Management
 router.get('/tasks', aiController.getTasks);
 router.post('/tasks', aiController.createTask);
+router.patch('/tasks/:id/toggle', aiController.toggleTaskStatus);
 
 module.exports = router;

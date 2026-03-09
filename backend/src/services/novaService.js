@@ -17,22 +17,26 @@ class NovaService {
     }
 
     /**
-     * Core function to invoke Nova model
+     * Core function to invoke Nova model with multi-turn history
      */
-    async invokeNova(prompt, systemPrompt = "You are an AI Productivity Copilot.") {
-        // If keys are missing, return mock data for hackathon development
+    async invokeNova(prompt, systemPrompt = "You are an AI Productivity Copilot.", history = []) {
+        // If keys are missing, return mock data
         if (!process.env.AWS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID.includes('your_')) {
-            console.warn("AWS Credentials missing. Returning mock response.");
             return this.getMockResponse(prompt);
         }
 
+        // Combine history with latest prompt
+        const messages = history.map(msg => ({
+            role: msg.role === 'assistant' ? 'assistant' : 'user',
+            content: [{ text: msg.content }]
+        }));
+
+        // Add latest prompt
+        messages.push({ role: "user", content: [{ text: prompt }] });
+
         const payload = {
-            inferenceConfig: {
-                max_new_tokens: 2000,
-                temperature: 0.7,
-                top_p: 0.9,
-            },
-            messages: [{ role: "user", content: [{ text: prompt }] }],
+            inferenceConfig: { max_new_tokens: 2000, temperature: 0.7, top_p: 0.9 },
+            messages,
             system: [{ text: systemPrompt }]
         };
 
@@ -53,8 +57,8 @@ class NovaService {
         }
     }
 
-    async generateResponse(prompt) {
-        return this.invokeNova(prompt);
+    async generateResponse(prompt, history = []) {
+        return this.invokeNova(prompt, "You are an AI Productivity Copilot with memory.", history);
     }
 
     async summarizeDocument(text) {

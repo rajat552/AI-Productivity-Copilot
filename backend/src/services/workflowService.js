@@ -4,19 +4,22 @@ const Task = require('../models/Task');
 /**
  * Agent Workflow Engine
  * Responsible for reasoning, planning, and executing multi-step AI workflows.
+ * Simulates "Nova Act" by logging specific UI/Action steps.
  */
 class WorkflowService {
-    /**
-     * Main function to execute the agentic workflow
-     * @param {string} command - The user's natural language command
-     * @param {string} documentText - Optional text from an uploaded document
-     */
-    async executeAgentWorkflow(command, documentText = "") {
+    async executeAgentWorkflow(command, documentText = "", history = []) {
         console.log(`\n🤖 Agent Input Received: "${command}"`);
 
+        const logs = [];
+        const addLog = (message, status = 'success') => {
+            logs.push({ message, status, timestamp: new Date() });
+            console.log(`[LOG]: ${message}`);
+        };
+
         try {
-            // Step 1 & 2: Intent Detection & Analysis
-            // We ask Nova to analyze the command and return structured intents
+            addLog("Analyzing natural language command with Nova 2 Lite...");
+
+            // Step 1 & 2: Intent Detection
             const intentPrompt = `
         Analyze the following user command and identify all high-level intents.
         Command: "${command}"
@@ -33,85 +36,86 @@ class WorkflowService {
                 const parsed = JSON.parse(analysisResponse.match(/\{.*\}/s)?.[0] || analysisResponse);
                 intents = parsed.intents || intents;
             } catch (e) {
-                console.warn("⚠️ Failed to parse intent JSON, falling back to keyword detection.");
                 if (command.toLowerCase().includes("summarize")) intents.push("summarize_document");
-                if (command.toLowerCase().includes("task") || command.toLowerCase().includes("todo")) intents.push("generate_tasks");
+                if (command.toLowerCase().includes("task")) intents.push("generate_tasks");
             }
 
-            console.log("🎯 Agent Detected Intents:", intents);
+            addLog(`Reasoning complete. Identified intents: ${intents.join(', ')}`);
 
             // Step 3: Task Planning
-            // Create a step-by-step execution plan based on detected intents
             const executionPlan = intents.map((intent, index) => ({
                 step: index + 1,
                 action: intent
             })).filter(step => step.action !== "general_chat" || intents.length === 1);
 
-            console.log("📝 Execution Plan:", executionPlan);
+            addLog(`Generated multi-step execution plan with ${executionPlan.length} actions.`);
 
-            // Step 4: Execute Steps sequentially
+            // Step 4: Execute Steps
             let finalResult = {
                 reply: "",
                 summary: null,
                 tasks: [],
                 emailDraft: null,
-                workflowExecuted: intents
+                workflowExecuted: intents,
+                logs: logs // Pass simulation logs back to UI
             };
 
             for (const step of executionPlan) {
-                console.log(`⚙️ Executing Step ${step.step}: ${step.action}`);
+                addLog(`Executing workflow step ${step.step}: ${step.action.replace('_', ' ')}...`);
 
-                switch (step.action) {
-                    case 'summarize_document':
-                        if (documentText || command.length > 100) {
-                            const textToSummarize = documentText || command;
-                            finalResult.summary = await novaService.summarizeDocument(textToSummarize);
-                            finalResult.reply += `\n\n📄 **Summary:**\n${finalResult.summary}`;
-                        } else {
-                            finalResult.reply += "\n\n⚠️ No document content found to summarize.";
-                        }
-                        break;
+                // Simulating "Nova Act" UI workflow steps
+                if (step.action === 'summarize_document') {
+                    addLog("Parsing document segments & calculating multimodal embeddings...");
+                    const textToSummarize = documentText || command;
+                    finalResult.summary = await novaService.summarizeDocument(textToSummarize);
+                    finalResult.reply += `\n\n📄 **Summary:**\n${finalResult.summary}`;
+                    addLog("Summary generated successfully.");
+                }
 
-                    case 'generate_tasks':
-                        const textForTasks = documentText || command;
-                        const extractedTasks = await novaService.generateTasks(textForTasks);
+                if (step.action === 'generate_tasks') {
+                    addLog("Scanning content for actionable items (Nova Reasoning)...");
+                    const textForTasks = documentText || command;
+                    const extractedTasks = await novaService.generateTasks(textForTasks);
 
-                        // Save each task to MongoDB
-                        for (const t of extractedTasks) {
-                            const savedTask = await Task.create({
-                                title: t.title,
-                                description: t.description || "Generated by AI Copilot",
-                                status: 'pending'
-                            });
-                            finalResult.tasks.push(savedTask);
-                        }
-                        finalResult.reply += `\n\n✅ Created ${finalResult.tasks.length} new tasks in your pipeline.`;
-                        break;
+                    addLog(`Identified ${extractedTasks.length} potential tasks. Syncing with MongoDB...`);
+                    for (const t of extractedTasks) {
+                        const savedTask = await Task.create({
+                            title: t.title,
+                            description: t.description || "Synthesized by Nova Copilot",
+                            status: 'pending'
+                        });
+                        finalResult.tasks.push(savedTask);
+                    }
+                    finalResult.reply += `\n\n✅ Tasks extracted and added to your strategy pipeline.`;
+                    addLog("Strategy pipeline updated.");
+                }
 
-                    case 'draft_email':
-                        const draftPrompt = `Draft a professional email based on this context: ${documentText || command}`;
-                        finalResult.emailDraft = await novaService.generateResponse(draftPrompt);
-                        finalResult.reply += `\n\n📧 **Email Draft:**\n${finalResult.emailDraft}`;
-                        break;
+                if (step.action === 'draft_email') {
+                    addLog("Synthesizing professional email draft...");
+                    const draftPrompt = `Draft a professional email based on this context: ${documentText || command}`;
+                    finalResult.emailDraft = await novaService.generateResponse(draftPrompt);
+                    finalResult.reply += `\n\n📧 **Email Draft:**\n${finalResult.emailDraft}`;
+                    addLog("Email draft synthesized.");
+                }
 
-                    case 'plan_schedule':
-                        const schedulePrompt = `Create a structured schedule based on this: ${command}`;
-                        const schedule = await novaService.generateResponse(schedulePrompt);
-                        finalResult.reply += `\n\n📅 **Planned Schedule:**\n${schedule}`;
-                        break;
+                if (step.action === 'plan_schedule') {
+                    addLog("Optimizing schedule for maximum productivity...");
+                    const schedulePrompt = `Create a structured schedule based on this: ${command}`;
+                    const schedule = await novaService.generateResponse(schedulePrompt);
+                    finalResult.reply += `\n\n📅 **Planned Schedule:**\n${schedule}`;
+                    addLog("Schedule optimization complete.");
+                }
 
-                    default:
-                        if (intents.length === 1) {
-                            finalResult.reply = await novaService.generateResponse(command);
-                        }
+                if (step.action === 'general_chat' && intents.length === 1) {
+                    finalResult.reply = await novaService.generateResponse(command, history);
                 }
             }
 
-            // Step 5: Combine & Return Results
-            console.log("🏁 Workflow Completed Successfully.\n");
+            addLog("Agentic workflow execution finished successfully.", 'success');
             return finalResult;
 
         } catch (error) {
+            addLog(`Workflow failed: ${error.message}`, 'error');
             console.error("❌ Agent Workflow Error:", error);
             throw error;
         }

@@ -31,20 +31,28 @@ export const uploadDocument = async (file) => {
 };
 
 export const getTasks = async () => {
-    // In a real app, this would fetch from /api/tasks
-    // For now, we simulate a small delay
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve([
-                { id: 1, title: 'Analyze Nova SDK', description: 'Review the latest Bedrock documentation', status: 'pending' },
-                { id: 2, title: 'UI Refinement', description: 'Apply premium dark mode styles', status: 'completed' },
-            ]);
-        }, 500);
-    });
+    try {
+        const response = await api.get('/tasks');
+        return response.data;
+    } catch (error) {
+        console.error('API Error:', error);
+        return [];
+    }
+};
+
+export const toggleTaskStatus = async (id) => {
+    try {
+        const response = await api.patch(`/tasks/${id}/toggle`);
+        return response.data;
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
+    }
 };
 
 export default {
     sendMessage,
     uploadDocument,
     getTasks,
+    toggleTaskStatus,
 };

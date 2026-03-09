@@ -8,7 +8,7 @@ export const useChat = () => {
     const [loading, setLoading] = useState(false);
 
     const sendMessage = useCallback(async (content) => {
-        if (!content.trim()) return;
+        if (!content.trim()) return null;
 
         const userMsg = { role: 'user', content };
         setMessages(prev => [...prev, userMsg]);
@@ -16,10 +16,13 @@ export const useChat = () => {
 
         try {
             const data = await sendApiMessage(content);
-            const assistantMsg = { role: 'assistant', content: data.response };
+            // Backend returns 'reply' field from executeAgentWorkflow
+            const assistantMsg = { role: 'assistant', content: data.reply || data.response };
             setMessages(prev => [...prev, assistantMsg]);
+            return data;
         } catch (error) {
             setMessages(prev => [...prev, { role: 'assistant', content: 'Error: Could not reach the AI server.' }]);
+            return null;
         } finally {
             setLoading(false);
         }
