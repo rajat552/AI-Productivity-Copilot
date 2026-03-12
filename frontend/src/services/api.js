@@ -60,10 +60,21 @@ export const createTask = async (taskData) => {
     }
 };
 
+export const deleteTask = async (id) => {
+    try {
+        const response = await api.delete(`/tasks/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
+    }
+};
+
 export default {
     sendMessage,
     uploadDocument,
     getTasks,
     toggleTaskStatus,
     createTask,
+    deleteTask,
 };

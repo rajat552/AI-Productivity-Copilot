@@ -1,5 +1,4 @@
 const { BedrockRuntimeClient, ConverseCommand } = require("@aws-sdk/client-bedrock-runtime");
-
 /**
  * Nova Service handles all direct interactions with Amazon Bedrock.
  * Uses IAM credential authentication via AWS SDK.

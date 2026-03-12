@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TaskCard from '../components/TaskCard';
 import { Plus, Filter, SortAsc, LayoutGrid, CheckSquare, X } from 'lucide-react';
-import { getTasks, createTask, toggleTaskStatus } from '../services/api';
+import { getTasks, createTask, toggleTaskStatus, deleteTask } from '../services/api';
 import { motion } from 'framer-motion';
 
 const TaskManager = () => {
@@ -31,6 +31,24 @@ const TaskManager = () => {
     const handleToggle = async (id) => {
         await toggleTaskStatus(id);
         fetchTasks();
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm("Are you sure you want to delete this task?")) {
+            // Optimistic Update: Remove from local state immediately
+            setTasks(prev => prev.filter(t => (t._id || t.id) !== id));
+
+            try {
+                await deleteTask(id);
+                // No need to fetch again if optimistic update worked, 
+                // but good for sync.
+                fetchTasks();
+            } catch (error) {
+                console.error("Failed to delete task", error);
+                // Rollback if failed
+                fetchTasks();
+            }
+        }
     };
 
     return (
@@ -65,12 +83,12 @@ const TaskManager = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {tasks.map((task, idx) => (
                     <motion.div
-                        key={task.id || idx}
+                        key={task._id || task.id || idx}
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: idx * 0.05 }}
                     >
-                        <TaskCard {...task} onToggle={handleToggle} />
+                        <TaskCard {...task} onToggle={handleToggle} onDelete={handleDelete} />
                     </motion.div>
                 ))}
 

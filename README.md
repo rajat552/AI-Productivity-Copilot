@@ -56,7 +56,7 @@ Since this project was built for the AWS Hackathon 2026, we have ensured full in
 1. **Step 1: IAM & API Authentication**: Our backend successfully performs the IAM handshake with AWS Bedrock. (See `docs/verification-proof/bedrock-handshake-logs.png` or `docs/backend_readiness.log`)
 2. **Step 2: Intent Reasoning Pipeline**: The logs confirm that the reasoning engine (Nova 2 Lite) logic is fully operational in the local environment and ready to scale.
 3. **Step 3: Support Communication**: We have documented our active ticket with AWS Support regarding the model access. (See `docs/verification-proof/aws-support-email.png`)
-4. **Step 4: Hybrid Fallback**: To ensure a flawless live demo, we implemented a model-agnostic router that switches to Gemini API when Bedrock verification is pending, demonstrating professional architectural resilience.
+4. **Step 4: Hybrid Fallback**: To ensure a flawless live demo, we implemented a model-agnostic router that switches to Gemini API when Bedrock verification is pending, demonstrating professional architectural resilience. (See `docs/verification-proof/architecture-fallback.md`)
 
 ---
 
@@ -106,34 +106,5 @@ GEMINI_API_KEY=your_key_for_hybrid_resilience
 
 ---
 
-```mermaid
-graph TD
-    A[User Input/Document Upload] --> B{Hybrid Model Router}
-    
-    B -- Primary Path --> C[Amazon Bedrock / Nova 2 Lite]
-    C --> D{Verification Status?}
-    
-    D -- Pending/Locked --> E[Fallback Triggered]
-    D -- Active --> F[Execute Agentic Workflow]
-    
-    E --> G[Gemini 1.5 Flash Pipeline]
-    G --> H[Response Generation & Task Extraction]
-    F --> H
-    
-    H --> I[Sync with MongoDB Atlas]
-    I --> J[Update UI Dashboard]
-    
-    subgraph "AWS Ecosystem (Implemented)"
-    C
-    D
-    end
-    
-    subgraph "Resilience Layer"
-    B
-    E
-    G
-    end
-
----
 ## 📄 License
 This project is built for the AWS Hackathon 2026.

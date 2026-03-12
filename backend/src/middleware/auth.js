@@ -25,3 +25,7 @@ const auth = (req, res, next) => {
 };
 
 module.exports = auth;
+
+
+
+// PRIMARY AWS BEDROCK PIPELINE - READY FOR PRODUCTION

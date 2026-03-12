@@ -1,15 +1,31 @@
 import React from 'react';
 import { Sparkles, LayoutList, Target } from 'lucide-react';
 import TaskCard from './TaskCard';
-import { toggleTaskStatus } from '../services/api';
+import { toggleTaskStatus, deleteTask } from '../services/api';
 
-const TaskPanel = ({ tasks = [], onRefetch }) => {
+const TaskPanel = ({ tasks = [], onRefetch, onDelete }) => {
     const handleToggle = async (id) => {
         try {
             await toggleTaskStatus(id);
             if (onRefetch) onRefetch();
         } catch (error) {
             console.error("Failed to toggle task", error);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (onDelete) {
+            onDelete(id);
+            return;
+        }
+        
+        if (window.confirm("Are you sure you want to delete this task?")) {
+            try {
+                await deleteTask(id);
+                if (onRefetch) onRefetch();
+            } catch (error) {
+                console.error("Failed to delete task", error);
+            }
         }
     };
 
@@ -43,7 +59,12 @@ const TaskPanel = ({ tasks = [], onRefetch }) => {
                     </div>
                 ) : (
                     tasks.map((task, idx) => (
-                        <TaskCard key={task._id || idx} {...task} onToggle={handleToggle} />
+                        <TaskCard 
+                            key={task._id || idx} 
+                            {...task} 
+                            onToggle={handleToggle} 
+                            onDelete={handleDelete} 
+                        />
                     ))
                 )}
             </div>

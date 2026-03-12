@@ -17,5 +17,6 @@ router.post('/upload', auth, upload.single('document'), aiController.handleUploa
 router.get('/tasks', auth, aiController.getTasks);
 router.post('/tasks', auth, aiController.createTask);
 router.patch('/tasks/:id/toggle', auth, aiController.toggleTaskStatus);
+router.delete('/tasks/:id', auth, aiController.deleteTask);
 
 module.exports = router;

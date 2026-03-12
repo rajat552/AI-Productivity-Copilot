@@ -40,8 +40,7 @@ exports.handleUpload = async (req, res, next) => {
 
         if (req.file.mimetype === 'application/pdf') {
             try {
-                const parser = new pdf.PDFParse({ data: req.file.buffer });
-                const data = await parser.getText();
+                const data = await pdf(req.file.buffer);
                 text = data.text;
             } catch (pdfError) {
                 console.warn('PDF parse failed, using raw text:', pdfError.message);
@@ -105,6 +104,17 @@ exports.toggleTaskStatus = async (req, res, next) => {
         task.status = task.status === 'completed' ? 'pending' : 'completed';
         await task.save();
         return successResponse(res, task);
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.deleteTask = async (req, res, next) => {
+    const { id } = req.params;
+    try {
+        const task = await Task.findByIdAndDelete(id);
+        if (!task) return errorResponse(res, 'Task not found', 404);
+        return successResponse(res, { message: 'Task deleted successfully' });
     } catch (error) {
         next(error);
     }

@@ -1,16 +1,28 @@
 import React from 'react';
-import { CheckCircle2, Circle, ArrowUpRight } from 'lucide-react';
+import { CheckCircle2, Circle, ArrowUpRight, Trash2 } from 'lucide-react';
 
-const TaskCard = ({ _id, title, description, status, priority = 'medium', onToggle }) => {
+const TaskCard = ({ _id, title, description, status, priority = 'medium', onToggle, onDelete }) => {
     const isCompleted = status === 'completed' || status === 'done';
 
     return (
-        <div className={`p-5 rounded-3xl border transition-all duration-300 group ${isCompleted
+        <div className={`p-5 rounded-3xl border transition-all duration-300 group relative ${isCompleted
                 ? 'bg-app-bg border-border-subtle opacity-50 grayscale'
                 : 'bg-card-bg border-border-subtle hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 cursor-pointer'
             }`}
             onClick={() => onToggle && onToggle(_id)}
         >
+            {/* Delete button - visible on hover */}
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete && onDelete(_id);
+                }}
+                className="absolute top-4 right-4 p-2 text-text-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10"
+                title="Delete Task"
+            >
+                <Trash2 size={16} />
+            </button>
+
             <div className="flex items-start gap-4">
                 <button
                     className={`mt-1 transition-all transform active:scale-90 ${isCompleted ? 'text-green-500' : 'text-text-muted hover:text-primary'

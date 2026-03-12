@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import ChatWindow from '../components/ChatWindow';
 import TaskPanel from '../components/TaskPanel';
 import ActivityFeed from '../components/ActivityFeed';
-import { getTasks } from '../services/api';
+import { getTasks, deleteTask } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Target, Zap } from 'lucide-react';
 
@@ -37,6 +37,20 @@ const Dashboard = () => {
     const handleWorkflowStart = () => {
         setIsProcessing(true);
         setIntents([]);
+    };
+
+    const handleDeleteTask = async (id) => {
+        if (window.confirm("Are you sure you want to delete this task?")) {
+            // Optimistic Update
+            setTasks(prev => prev.filter(t => (t._id || t.id) !== id));
+            try {
+                await deleteTask(id);
+                fetchTasks(); // Final sync
+            } catch (error) {
+                console.error("Delete failed", error);
+                fetchTasks(); // Rollback
+            }
+        }
     };
 
     return (
@@ -86,7 +100,7 @@ const Dashboard = () => {
                             <span className="text-[10px] font-black text-primary uppercase tracking-widest">{tasks.length} ACTIVE</span>
                         </div>
                     </header>
-                    <TaskPanel tasks={tasks} onRefetch={fetchTasks} />
+                    <TaskPanel tasks={tasks} onRefetch={fetchTasks} onDelete={handleDeleteTask} />
                 </div>
 
                 {/* Activity Feed (Workflow Logs) */}
