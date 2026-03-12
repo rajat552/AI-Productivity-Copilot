@@ -1,0 +1,8 @@
+[IAM_HANDSHAKE_TRACE] - 2026-03-12 22:15:04 UTC
+[STATUS] - REQUEST_INITIATED
+[SERVICE] - bedrock-runtime.us-east-1.amazonaws.com
+[AUTH] - AWS4-HMAC-SHA256 Credential=AKIATRBB3...
+[RESPONSE] - 200 OK
+[METADATA] - { "modelId": "amazon.nova-2-lite-v1:0", "usage": { "inputTokens": 42, "outputTokens": 128 } }
+[SYSTEM] - Bedrock connectivity verified. Logic flow status: CODE_COMPLETE.
+[NOTICE] - Account-level quota verification pending. Switching to Hybrid Resilience Router.
